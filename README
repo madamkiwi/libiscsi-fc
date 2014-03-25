@@ -1,0 +1,183 @@
+Libiscsi is a clientside library to implement the iSCSI protocol
+that can be used to access resource of an iSCSI Target.
+
+The library is fully async with regards to iscsi commands and scsi
+tasks, but a sync layer is also provided for ease of use for simpler
+applications.
+
+
+The src directory contain a handful of useful iscsi utilities
+such as logging in to and enumerating all targets on a portal
+and all devices of a target.
+
+The examples directory contain example implementation of how to
+access both the sync and acync api of libiscsi.
+
+
+
+Libiscsi is a work in progress.
+It aims to become a full async library for iscsi functionality,
+including all features required to establish and maintain a iscsi
+session, as well as a low level scsi library to create scsi cdb's
+and parse/unmarshall data-in structures.
+
+
+Installation
+============
+./autogen.sh
+./configure
+make
+sudo make install
+
+Build RPM
+=========
+To build RPMs run the following script from the libiscsi root directory
+./packaging/RPM/makerpms.sh
+
+iSCSI URL Format
+================
+iSCSI devices are specified by a URL format on the following form :
+    iscsi://[<username>[%<password>]@]<host>[:<port>]/<target-iqn>/<lun>
+Example:
+    iscsi://server/iqn.ronnie.test/1
+When using CHAP authentication, username and password can be specified as part of the URL
+    iscsi://ronnie%password@server/iqn.ronnie.test/1
+but this may make the user and password visible in log files as well as in ps aux output.
+So it is also possible to provide either just the password or both the password and username
+via environment variables.
+The username and/or password can be set via
+LIBISCSI_CHAP_USERNAME=ronnie
+LIBISCSI_CHAP_PASSWORD=password
+
+Example:
+   LIBISCSI_CHAP_PASSWORD=password iscsi-inq iscsi://ronnie@10.1.1.27/iqn.ronnie.test/1
+
+
+IPv6 support
+============
+Libiscsi supports IPv6, either as names resolving into IPv6 addresses or when
+IPv6 addresses are explicitely set in the URL.
+When specifying IPv6 addresses in the URL, they have to be specified in 
+[...] bracket form.
+
+Example:
+  iscsi://[fec0:2727::3]:3260/iqn.ronnie.test/1
+
+
+Header Digest
+=============
+Libiscsi supports HeaderDigest.
+By default, libiscsi will offer None,CRC32C and let the target pick whether 
+Header digest is to be used or not.
+This can be overridden by an application by calling iscsi_set_header_digest()
+if the application wants to force a specific setting.
+
+
+Patches
+=======
+The patches subdirectory contains patches to make some external packages iscsi 
+aware and make them use libiscsi.
+Currently we have SG3-UTILS and MTX.
+Patches for other packages would be welcome.
+
+
+ISCSI-TEST-CU
+=============
+./bin/iscsi-test-cu is a CUnit based test tool for scsi and iscsi.
+
+iscsi-test-cu depends on the CUnit library and will only build
+if libcunit can be found during configure.
+
+The configure script will check if a suitable libcunit is available
+and only build the test tool iff it can find libcunit.
+This test is done toward the end of the configure phase and should result
+in a line simlar to :
+
+checking whether libcunit is available... yes
+
+Some example commands:
+./bin/iscsi-test-cu -l to list all tests.
+./bin/iscsi-test-cu -t <test-suite> <iscsi-url> to run a test suite
+./bin/iscsi-test-cu -t <test-suite>.<test> <iscsi-url> to run a specific test
+
+The tests are all self-documented to describe what they test and how they test.
+Use -V with a test to print the documentation for a test.
+
+
+ISCSI-TEST
+==========
+iscsi-test is depreciated and is being replaced by iscsi-test-cu.
+No new tests will be developed for iscsi-test.
+
+The test-tool subdirectory contains a iscsi/scsi test tool.
+This is a tool that is aimed at providing a comprehensive iscsi and scsi
+emulation test suite. 
+
+Run ./bin/iscsi-test --help and
+Run ./bin/iscsi-test --list
+for instructions
+
+Example:
+$ ./bin/iscsi-test --initiator-name=iqn.ronnie.test --test=T0105_read10_invalid iscsi://127.0.0.1/iqn.ronnie.test/1
+=========
+Running test T0105_read10_invalid
+Read10 1 block but with iscsi ExpectedDataTransferLength==0 ... [FAILED]
+Read10 of 1 block with iscsi ExpectedDataTransferLength==0 should fail.
+TEST T0105_read10_invalid [FAILED]
+
+
+
+LD_PRELOAD FUN
+==============
+There is a small LD_PRELOAD hack in the src directory that intercepts a handful
+of system calls and converts ISCSI URLs to look and behave as if they are 
+normal read-only files.
+This allows using standard unix tools to become iscsi aware with no modifications.
+
+For example:
+The stat command: this shows the size of the iSCSI LUN as if it was a normal file:
+$ LD_PRELOAD=./bin/ld_iscsi.so stat iscsi://127.0.0.1:3262/iqn.ronnie.test/2
+  File: `iscsi://127.0.0.1:3262/iqn.ronnie.test/2'
+  Size: 3431540736	Blocks: 0          IO Block: 0      regular file
+Device: 0h/0d	Inode: 0           Links: 0
+Access: (0444/-r--r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
+Access: 1970-01-01 10:00:00.000000000 +1000
+Modify: 1970-01-01 10:00:00.000000000 +1000
+Change: 1970-01-01 10:00:00.000000000 +1000
+
+The cat command, which allows you to read/dump a iSCSI LUN to a file :
+$ LD_PRELOAD=./bin/ld_iscsi.so cat iscsi://127.0.0.1:3262/iqn.ronnie.test/2 >copy_of_iscsi_lun
+
+Or using dd even :
+LD_PRELOAD=./bin/ld_iscsi.so dd if=iscsi://127.0.0.1:3262/iqn.ronnie.test/2 of=copy_of_LUN bs=10M count=1
+
+The LD_PRELOAD hack is incomplete and needs more functions to be intercepted before becomming fully functional. Patches welcome!
+
+For now, it is sufficiently complete for trivial commands like stat and cat.
+You probably need to implement at least lseek, pread, pwrite before it becomes really useful.
+
+
+SUPPORTED PLATFORMS
+===================
+libiscsi is pure posix and should with some tweaks run on any host that
+provides a posix-like environment.
+
+Libiscsi has been tested on:
+* Linux (32 and 64 bit)
+* Cygwin
+* FreeBSD
+* Windows (Win7-VisualStudio10)
+* OpenSolaris
+* Solaris 11 : Use "gmake" to build.
+* OS X
+
+RELEASE TARBALLS
+================
+Release tarballs are available at https://sites.google.com/site/libiscsitarballs/libiscsitarballs/
+
+
+MAILINGLIST
+===========
+A libiscsi mailinglist is available at http://groups.google.com/group/libiscsi
+Announcements of new versions of libiscsi will be posted to this list.
+
