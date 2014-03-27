@@ -39,12 +39,6 @@
 #include "iscsi-private.h"
 #include "scsi-lowlevel.h"
 
-struct iscsi_sync_state {
-   int finished;
-   int status;
-   struct scsi_task *task;
-};
-
 static void
 event_loop(struct iscsi_context *iscsi, struct iscsi_sync_state *state)
 {
@@ -54,7 +48,7 @@ event_loop(struct iscsi_context *iscsi, struct iscsi_sync_state *state)
 	while (state->finished == 0) {
 		pfd.fd = iscsi_get_fd(iscsi);
 		pfd.events = iscsi_which_events(iscsi);
-
+fprintf(stderr, "kalai event %d\n", pfd.events);
 		if ((ret = poll(&pfd, 1, 1000)) < 0) {
 			iscsi_set_error(iscsi, "Poll failed");
 			state->status = -1;
@@ -64,13 +58,16 @@ event_loop(struct iscsi_context *iscsi, struct iscsi_sync_state *state)
 			iscsi_timeout_scan(iscsi);
 			continue;
 		}
+fprintf(stderr, "kalai event %d\n", pfd.events);
 		if (iscsi_service(iscsi, pfd.revents) < 0) {
+fprintf(stderr, "kalai event %d\n", pfd.events);
 			iscsi_set_error(iscsi,
 				"iscsi_service failed with : %s",
 				iscsi_get_error(iscsi));
 			state->status = -1;
 			return;
 		}
+fprintf(stderr, "kalai event %d\n", pfd.events);
 	}
 }
 
@@ -456,7 +453,6 @@ iscsi_readcapacity10_sync(struct iscsi_context *iscsi, int lun, int lba,
 				"Failed to send ReadCapacity10 command");
 		return NULL;
 	}
-
 	event_loop(iscsi, &state);
 
 	return state.task;

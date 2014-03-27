@@ -374,11 +374,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'd':
 			device = optarg;
-	fprintf(stderr, "\ngetting device: %s\n", device);
 			break;
 		case 'L':
 			lun = atoi(optarg);
-	fprintf(stderr, "\ngetting LUN id %d\n", lun);
 			break;
 		default:
 			fprintf(stderr, "Unrecognized option '%c'\n\n", c);
@@ -389,8 +387,6 @@ int main(int argc, char *argv[])
 
 
 	real_iscsi_queue_pdu = dlsym(RTLD_NEXT, "iscsi_queue_pdu");
-	fprintf(stderr, "\nLUN id #%d\n", lun);
-
 
 	if (show_help != 0) {
 		print_help();
@@ -415,11 +411,6 @@ int main(int argc, char *argv[])
 	if (argv[optind] != NULL) {
 		url = strdup(argv[optind]);
 	}
-	/*if (url == NULL) {
-		fprintf(stderr, "You must specify the URL\n");
-		print_usage();
-		exit(10);
-	}*/
 
 	iscsi = iscsi_context_login("dummy", url, &lun);
 	if (iscsi == NULL) {
@@ -431,16 +422,15 @@ int main(int argc, char *argv[])
 	   All devices support readcapacity10 but only some support
 	   readcapacity16
 	*/
-	fprintf(stderr, "meow\n");
 	task = iscsi_readcapacity10_sync(iscsi, lun, 0, 0);
-	fprintf(stderr, "meow\n");
 	if (task == NULL) {
 		printf("Failed to send READCAPACITY10 command: %s\n", iscsi_get_error(iscsi));
 		iscsi_destroy_context(iscsi);
 		return -1;
 	}
+	fprintf(stderr, "%d\n", task->cdb_size);
 	for (idx = 0; idx < task->cdb_size; idx++) {
-	  fprintf(stderr, "%d", task->cdb[idx]);
+	  fprintf(stderr, "%02x ", task->cdb[idx]);
 	}
 	fprintf(stderr, "\n");
 	if (task->status != SCSI_STATUS_GOOD) {

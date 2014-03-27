@@ -38,7 +38,6 @@
 #include "scsi-lowlevel.h"
 #include "slist.h"
 
-#if 0
 static void
 iscsi_scsi_response_cb(struct iscsi_context *iscsi, int status,
 		       void *command_data _U_, void *private_data)
@@ -67,7 +66,6 @@ iscsi_scsi_response_cb(struct iscsi_context *iscsi, int status,
 				      scsi_cbdata->private_data);
 	}
 }
-#endif
 
 static int
 iscsi_send_data_out(struct iscsi_context *iscsi, struct iscsi_pdu *cmd_pdu,
@@ -201,10 +199,8 @@ iscsi_scsi_command_async(struct iscsi_context *iscsi, int lun,
 			 struct scsi_task *task, iscsi_command_cb cb,
 			 struct iscsi_data *d, void *private_data)
 {
-if (iscsi && lun && task && cb && d && private_data)
-{}
+//((struct iscsi_sync_state*)private_data)->task = task;
 
-#if 0
 	struct iscsi_pdu *pdu;
 	int flags;
 
@@ -345,7 +341,7 @@ if (iscsi && lun && task && cb && d && private_data)
 	task->cmdsn = pdu->cmdsn;
 	task->itt   = pdu->itt;
 	task->lun   = lun;
-#endif
+
 	return 0;
 }
 
@@ -353,6 +349,7 @@ int
 iscsi_process_scsi_reply(struct iscsi_context *iscsi, struct iscsi_pdu *pdu,
 			 struct iscsi_in_pdu *in)
 {
+fprintf(stderr, "kalai reply\n");
 if (iscsi && pdu && in)
 {}
 #if 0
@@ -696,6 +693,7 @@ iscsi_readcapacity10_task(struct iscsi_context *iscsi, int lun, int lba,
 				"readcapacity10 cdb.");
 		return NULL;
 	}
+
 	if (iscsi_scsi_command_async(iscsi, lun, task, cb,
 				     NULL, private_data) != 0) {
 		scsi_free_scsi_task(task);

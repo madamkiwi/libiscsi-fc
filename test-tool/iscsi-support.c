@@ -104,18 +104,19 @@ iscsi_context_login(const char *initiatorname, const char *url, int *lun)
 		return NULL;
 	}
 
-	iscsi_url = NULL;
-	if (url && lun)
-{}
-	/*iscsi_url = iscsi_parse_full_url(iscsi, url);
+	iscsi_url = iscsi_parse_full_url(iscsi, url);
 	if (iscsi_url == NULL) {
 		fprintf(stderr, "Failed to parse URL: %s\n",
 			iscsi_get_error(iscsi));
 		iscsi_destroy_context(iscsi);
 		return NULL;
-	}*/
+	}
 
+if (lun) {}
 	//iscsi_set_targetname(iscsi, iscsi_url->target);
+	iscsi->is_loggedin = 1;
+	iscsi->is_connected = 1;
+	iscsi_set_targetname(iscsi, " ");
 	iscsi_set_session_type(iscsi, ISCSI_SESSION_NORMAL);
 	iscsi_set_header_digest(iscsi, ISCSI_HEADER_DIGEST_NONE_CRC32C);
 

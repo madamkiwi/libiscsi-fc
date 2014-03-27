@@ -191,6 +191,7 @@ iscsi_connect_async(struct iscsi_context *iscsi, const char *portal,
 	union socket_address sa;
 	int socksize;
 
+fprintf(stderr, "meow iscsi_connect_async");
 	ISCSI_LOG(iscsi, 2, "connecting to portal %s",portal);
 
 	if (iscsi->fd != -1) {
@@ -374,6 +375,7 @@ iscsi_disconnect(struct iscsi_context *iscsi)
 int
 iscsi_get_fd(struct iscsi_context *iscsi)
 {
+	iscsi->fd = 0;
 	return iscsi->fd;
 }
 
@@ -490,7 +492,7 @@ iscsi_read_from_socket(struct iscsi_context *iscsi)
 {
 	struct iscsi_in_pdu *in;
 	ssize_t data_size, count, padding_size;
-
+if (iscsi->fd != 0) {
 	if (iscsi->incoming == NULL) {
 		iscsi->incoming = iscsi_szmalloc(iscsi, sizeof(struct iscsi_in_pdu));
 		if (iscsi->incoming == NULL) {
@@ -580,18 +582,19 @@ iscsi_read_from_socket(struct iscsi_context *iscsi)
 
 	SLIST_ADD_END(&iscsi->inqueue, in);
 	iscsi->incoming = NULL;
-
-
+} else {
+fprintf(stderr, "kalai in queue\n");
 	while (iscsi->inqueue != NULL) {
 		struct iscsi_in_pdu *current = iscsi->inqueue;
 
+fprintf(stderr, "kalai in queue\n");
 		if (iscsi_process_pdu(iscsi, current) != 0) {
 			return -1;
 		}
 		SLIST_REMOVE(&iscsi->inqueue, current);
 		iscsi_free_iscsi_in_pdu(iscsi, current);
 	}
-
+}
 
 	return 0;
 }
@@ -608,7 +611,9 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 		iscsi_set_error(iscsi, "trying to write but not connected");
 		return -1;
 	}
-
+if (iscsi->fd == 0) {
+return 0;
+}
 	while (iscsi->outqueue != NULL || iscsi->outqueue_current != NULL) {
 		if (iscsi->outqueue_current == NULL) {
 			if (iscsi_serial32_compare(iscsi->outqueue->cmdsn, iscsi->maxcmdsn) > 0) {
@@ -636,19 +641,15 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 				     pdu->outdata.data + pdu->outdata_written,
 				     pdu->outdata.size - pdu->outdata_written,
 				     0);
-			if (count == -1) {
+			/*if (count == -1) {
 				if (errno == EAGAIN || errno == EWOULDBLOCK) {
 					return 0;
 				}
 				iscsi_set_error(iscsi, "Error when writing to "
 						"socket :%d", errno);
 				return -1;
-			}
+			}*/
 			pdu->outdata_written += count;
-		}
-		/* if we havent written the full header yet. */
-		if (pdu->outdata_written != pdu->outdata.size) {
-			return 0;
 		}
 
 		/* Write any iovectors that might have been passed to us */
@@ -724,7 +725,7 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 	if (iscsi->fd < 0) {
 		return 0;
 	}
-
+#if 0
 	if (revents & POLLERR) {
 		int err = 0;
 		socklen_t err_size = sizeof(err);
@@ -795,7 +796,7 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 		}
 		return 0;
 	}
-
+#endif
 	if (revents & POLLOUT && (iscsi->outqueue != NULL || iscsi->outqueue_current != NULL)) {
 		if (iscsi_write_to_socket(iscsi) != 0) {
 			return iscsi_service_reconnect_if_loggedin(iscsi);

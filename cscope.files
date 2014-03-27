@@ -330,3 +330,4 @@
 ./src/iscsi-ls.c
 ./src/iscsi-readcapacity16.c
 ./src/iscsi-swp.c
+./config.h

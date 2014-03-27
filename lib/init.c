@@ -462,7 +462,27 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 	char *tmp;
 	int l = 0;
 
-	if (strncmp(url, "iscsi://", 8)) {
+	if (!url) {
+		// probably FC, create a fake iscsi_url
+		if (iscsi != NULL) {
+			iscsi_url = iscsi_malloc(iscsi, sizeof(struct iscsi_url));
+		} else {
+			iscsi_url = malloc(sizeof(struct iscsi_url));
+		}
+
+		if (iscsi_url == NULL) {
+			iscsi_set_error(iscsi, "Out-of-memory: Failed to allocate "
+				"iscsi_url structure");
+			return NULL;
+		}
+		memset(iscsi_url, 0, sizeof(struct iscsi_url));
+		iscsi_url->iscsi= iscsi;
+
+		strncpy(iscsi_url->portal," ",MAX_STRING_SIZE);
+		iscsi_url->lun = 1;
+		return iscsi_url;
+	}
+	else if (strncmp(url, "iscsi://", 8)) {
 		if (full) {
 			iscsi_set_error(iscsi, "Invalid URL %s\niSCSI URL must "
 				"be of the form: %s",
@@ -472,6 +492,7 @@ iscsi_parse_url(struct iscsi_context *iscsi, const char *url, int full)
 				"URL must be of the form: %s",
 				url, ISCSI_PORTAL_URL_SYNTAX);
 		}
+
 		return NULL;
 	}
 

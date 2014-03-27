@@ -33,6 +33,12 @@ extern "C" {
 struct iscsi_context;
 struct sockaddr;
 
+struct iscsi_sync_state {
+   int finished;
+   int status;
+   struct scsi_task *task;
+};
+
 /* API VERSION */
 #define LIBISCSI_API_VERSION (20131020)
 

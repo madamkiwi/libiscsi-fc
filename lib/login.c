@@ -1180,7 +1180,7 @@ struct iscsi_in_pdu *in)
 		iscsi->expcmdsn = expcmdsn;
 	}
 
-	iscsi->is_loggedin = 0;
+	iscsi->is_loggedin = 1;
 	pdu->callback(iscsi, SCSI_STATUS_GOOD, NULL, pdu->private_data);
 
 	return 0;
@@ -1190,12 +1190,11 @@ int
 iscsi_set_session_type(struct iscsi_context *iscsi,
 		       enum iscsi_session_type session_type)
 {
-	if (iscsi->is_loggedin) {
+	/*if (iscsi->is_loggedin) {
 		iscsi_set_error(iscsi, "trying to set session type while "
 				"logged in");
 		return -1;
-	}
-
+	}*/
 	iscsi->session_type = session_type;
 
 	return 0;

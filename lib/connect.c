@@ -152,6 +152,10 @@ int
 iscsi_full_connect_async(struct iscsi_context *iscsi, const char *portal,
 			 int lun, iscsi_command_cb cb, void *private_data)
 {
+fprintf(stderr, "meow iscsi_full_connect_async");
+if (iscsi && portal && lun && cb && private_data)
+{}
+return 0;
 	struct connect_task *ct;
 
 	iscsi->lun = lun;
