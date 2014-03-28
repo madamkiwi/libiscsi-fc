@@ -28,9 +28,8 @@ int T0430_report_all_supported_ops(const char *initiator, const char *url)
 	struct iscsi_context *iscsi;
 	struct scsi_task *task;
 	struct scsi_report_supported_op_codes *tmp_rsoc;
-	struct scsi_command_descriptor *desc;
 	int ret, lun;
-	int full_size, desc_size;
+	int full_size;
 	int i;
 
 	printf("0430_report_all_supported_ops:\n");
@@ -174,9 +173,6 @@ int T0430_report_all_supported_ops(const char *initiator, const char *url)
 
 	printf("Supported Commands (with timeout information): %d\n", tmp_rsoc->num_descriptors);
 	printf("=======================\n");
-	desc_size = sizeof (struct scsi_command_descriptor)
-		+  sizeof (struct scsi_op_timeout_descriptor);
-	desc = &tmp_rsoc->descriptors[0];
 
 	printf("\n[OK]\n");
 	scsi_free_scsi_task(task);

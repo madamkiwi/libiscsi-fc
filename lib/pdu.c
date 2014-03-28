@@ -371,8 +371,6 @@ iscsi_process_pdu(struct iscsi_context *iscsi, struct iscsi_in_pdu *in)
 	ahslen = in->hdr[4];
 	itt = scsi_get_uint32(&in->hdr[16]);
 
-int idx=0;
-fprintf(stderr, "kalai %d \n",idx++);
 	if (ahslen != 0) {
 		iscsi_set_error(iscsi, "cant handle expanded headers yet");
 		return -1;
@@ -394,7 +392,6 @@ fprintf(stderr, "kalai %d \n",idx++);
 		return 0;
 	}
 
-fprintf(stderr, "kalai %d \n",idx++);
 	for (pdu = iscsi->waitpdu; pdu; pdu = pdu->next) {
 		enum iscsi_opcode expected_response = pdu->response_opcode;
 		int is_finished = 1;

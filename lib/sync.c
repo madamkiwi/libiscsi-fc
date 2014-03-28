@@ -44,31 +44,34 @@ event_loop(struct iscsi_context *iscsi, struct iscsi_sync_state *state)
 {
 	struct pollfd pfd;
 	int ret;
+	int fd;
+	short events;
+	short revents;
 
 	while (state->finished == 0) {
-		pfd.fd = iscsi_get_fd(iscsi);
-		pfd.events = iscsi_which_events(iscsi);
-fprintf(stderr, "kalai event %d\n", pfd.events);
+		fd = pfd.fd = iscsi_get_fd(iscsi);
+		events = pfd.events = iscsi_which_events(iscsi);
+		revents = pfd.revents;
 		if ((ret = poll(&pfd, 1, 1000)) < 0) {
 			iscsi_set_error(iscsi, "Poll failed");
 			state->status = -1;
 			return;
 		}
+if (fd != pfd.fd || events != pfd.events || revents != pfd.revents)
+fprintf(stderr, "%d %d , %d %d , %d %d\n", fd, pfd.fd, events, pfd.events, revents, pfd.revents);
 		if (ret == 0) {
 			iscsi_timeout_scan(iscsi);
 			continue;
 		}
-fprintf(stderr, "kalai event %d\n", pfd.events);
 		if (iscsi_service(iscsi, pfd.revents) < 0) {
-fprintf(stderr, "kalai event %d\n", pfd.events);
 			iscsi_set_error(iscsi,
 				"iscsi_service failed with : %s",
 				iscsi_get_error(iscsi));
 			state->status = -1;
 			return;
 		}
-fprintf(stderr, "kalai event %d\n", pfd.events);
 	}
+fprintf(stderr, "kalai complete\n");
 }
 
 /*
@@ -116,7 +119,6 @@ iscsi_full_connect_sync(struct iscsi_context *iscsi,
 	struct iscsi_sync_state state;
 
 	memset(&state, 0, sizeof(state));
-
 	if (iscsi_full_connect_async(iscsi, portal, lun,
 				     iscsi_sync_cb, &state) != 0) {
 		iscsi_set_error(iscsi,
@@ -124,7 +126,6 @@ iscsi_full_connect_sync(struct iscsi_context *iscsi,
 				iscsi_get_error(iscsi));
 		return -1;
 	}
-
 	event_loop(iscsi, &state);
 
 	return state.status;
@@ -446,7 +447,7 @@ iscsi_readcapacity10_sync(struct iscsi_context *iscsi, int lun, int lba,
 	struct iscsi_sync_state state;
 
 	memset(&state, 0, sizeof(state));
-
+fprintf(stderr, "kalai\n");
 	if (iscsi_readcapacity10_task(iscsi, lun, lba, pmi,
 				       scsi_sync_cb, &state) == NULL) {
 		iscsi_set_error(iscsi,

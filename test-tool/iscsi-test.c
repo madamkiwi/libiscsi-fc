@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 	int res, num_failed, num_skipped;
 	struct scsi_test *test;
 	char *testname = NULL;
-	char *device = NULL;
+	//char *device = NULL;
 	char *skipname = NULL;
 	int lun;
 	int idx;
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
 			initiatorname2 = optarg;
 			break;
 		case 'd':
-			device = optarg;
+			//device = optarg;
 			break;
 		case 'L':
 			lun = atoi(optarg);
@@ -422,6 +422,7 @@ int main(int argc, char *argv[])
 	   All devices support readcapacity10 but only some support
 	   readcapacity16
 	*/
+fprintf(stderr, "kalai in main\n");
 	task = iscsi_readcapacity10_sync(iscsi, lun, 0, 0);
 	if (task == NULL) {
 		printf("Failed to send READCAPACITY10 command: %s\n", iscsi_get_error(iscsi));

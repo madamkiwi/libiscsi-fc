@@ -947,15 +947,15 @@ main(int argc, char *argv[])
 	/* XXX why is this done? */
 	real_iscsi_queue_pdu = dlsym(RTLD_NEXT, "iscsi_queue_pdu");
 
-	if (tgt_url == NULL) {
+	/*if (tgt_url == NULL) {
 		fprintf(stderr, "You must specify the URL\n");
 		print_usage();
 		if (testname_re)
 			free(testname_re);
 		return 10;
-	}
+	}*/
 
-	iscsic = iscsi_context_login(initiatorname1, tgt_url, &lun);
+	iscsic = iscsi_context_login("dummy", tgt_url, &lun);
 	if (iscsic == NULL) {
 		printf("Failed to login to target\n");
 		return -1;

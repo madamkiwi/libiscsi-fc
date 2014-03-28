@@ -78,6 +78,7 @@ iscsi_add_to_outqueue(struct iscsi_context *iscsi, struct iscsi_pdu *pdu)
 	struct iscsi_pdu *current = iscsi->outqueue;
 	struct iscsi_pdu *last = NULL;
 
+fprintf(stderr, "kalai adding to outqueue");
 	if (iscsi->scsi_timeout > 0) {
 		pdu->scsi_timeout = time(NULL) + iscsi->scsi_timeout;
 	} else {
@@ -191,7 +192,6 @@ iscsi_connect_async(struct iscsi_context *iscsi, const char *portal,
 	union socket_address sa;
 	int socksize;
 
-fprintf(stderr, "meow iscsi_connect_async");
 	ISCSI_LOG(iscsi, 2, "connecting to portal %s",portal);
 
 	if (iscsi->fd != -1) {
@@ -236,13 +236,30 @@ fprintf(stderr, "meow iscsi_connect_async");
 		}
 		*str = 0;
 	}
-
+int freeai = 1;
 	/* is it a hostname ? */
 	if (getaddrinfo(host, NULL, NULL, &ai) != 0) {
 		iscsi_free(iscsi, addr);
 		iscsi_set_error(iscsi, "Invalid target:%s  "
 			"Can not resolv into IPv4/v6.", portal);
-		return -1;
+freeai = 0;
+  struct sockaddr_in *sin;
+
+  sin = malloc(sizeof(struct sockaddr_in));
+  sin->sin_family=AF_INET;
+
+  /* Some error checking would be nice */
+  sin->sin_addr.s_addr = inet_addr(host);
+
+  sin->sin_port=0;
+
+  ai = malloc(sizeof(struct addrinfo));
+
+  ai->ai_family = AF_INET;
+  ai->ai_addrlen = sizeof(struct sockaddr_in);
+  ai->ai_addr = (struct sockaddr *)sin;
+
+
  	}
 	iscsi_free(iscsi, addr);
 
@@ -298,7 +315,6 @@ fprintf(stderr, "meow iscsi_connect_async");
 	if (iscsi->tcp_syncnt > 0) {
 		set_tcp_syncnt(iscsi);
 	}
-
 #if __linux
 	if (iscsi->bind_interfaces[0]) {
 		char *pchr = iscsi->bind_interfaces, *pchr2;
@@ -344,6 +360,7 @@ fprintf(stderr, "meow iscsi_connect_async");
 		return -1;
 	}
 
+if (freeai == 1)
 	freeaddrinfo(ai);
 
 	strncpy(iscsi->connected_portal,portal,MAX_STRING_SIZE);
@@ -375,7 +392,6 @@ iscsi_disconnect(struct iscsi_context *iscsi)
 int
 iscsi_get_fd(struct iscsi_context *iscsi)
 {
-	iscsi->fd = 0;
 	return iscsi->fd;
 }
 
@@ -583,11 +599,9 @@ if (iscsi->fd != 0) {
 	SLIST_ADD_END(&iscsi->inqueue, in);
 	iscsi->incoming = NULL;
 } else {
-fprintf(stderr, "kalai in queue\n");
 	while (iscsi->inqueue != NULL) {
 		struct iscsi_in_pdu *current = iscsi->inqueue;
 
-fprintf(stderr, "kalai in queue\n");
 		if (iscsi_process_pdu(iscsi, current) != 0) {
 			return -1;
 		}
@@ -611,9 +625,6 @@ iscsi_write_to_socket(struct iscsi_context *iscsi)
 		iscsi_set_error(iscsi, "trying to write but not connected");
 		return -1;
 	}
-if (iscsi->fd == 0) {
-return 0;
-}
 	while (iscsi->outqueue != NULL || iscsi->outqueue_current != NULL) {
 		if (iscsi->outqueue_current == NULL) {
 			if (iscsi_serial32_compare(iscsi->outqueue->cmdsn, iscsi->maxcmdsn) > 0) {
@@ -725,7 +736,6 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 	if (iscsi->fd < 0) {
 		return 0;
 	}
-#if 0
 	if (revents & POLLERR) {
 		int err = 0;
 		socklen_t err_size = sizeof(err);
@@ -749,6 +759,7 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 		}
 		return iscsi_service_reconnect_if_loggedin(iscsi);
 	}
+fprintf(stderr, "revents = %d", revents);
 	if (revents & POLLHUP) {
 		iscsi_set_error(iscsi, "iscsi_service: POLLHUP, "
 				"socket error.");
@@ -757,6 +768,7 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 						iscsi->connect_data);
 			iscsi->socket_status_cb = NULL;
 		}
+fprintf(stderr, "iscsi < 0");
 		return iscsi_service_reconnect_if_loggedin(iscsi);
 	}
 
@@ -796,7 +808,6 @@ iscsi_service(struct iscsi_context *iscsi, int revents)
 		}
 		return 0;
 	}
-#endif
 	if (revents & POLLOUT && (iscsi->outqueue != NULL || iscsi->outqueue_current != NULL)) {
 		if (iscsi_write_to_socket(iscsi) != 0) {
 			return iscsi_service_reconnect_if_loggedin(iscsi);

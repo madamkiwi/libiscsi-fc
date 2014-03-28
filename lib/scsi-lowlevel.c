@@ -505,7 +505,6 @@ scsi_reportluns_datain_unmarshall(struct scsi_task *task)
 struct scsi_task *
 scsi_cdb_readcapacity10(int lba, int pmi)
 {
-fprintf(stderr, "kalai scsi_cdb_readcapacity10\n");
 	struct scsi_task *task;
 
 	task = malloc(sizeof(struct scsi_task));

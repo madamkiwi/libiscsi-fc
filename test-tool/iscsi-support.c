@@ -112,7 +112,6 @@ iscsi_context_login(const char *initiatorname, const char *url, int *lun)
 		return NULL;
 	}
 
-if (lun) {}
 	//iscsi_set_targetname(iscsi, iscsi_url->target);
 	iscsi->is_loggedin = 1;
 	iscsi->is_connected = 1;
@@ -120,16 +119,16 @@ if (lun) {}
 	iscsi_set_session_type(iscsi, ISCSI_SESSION_NORMAL);
 	iscsi_set_header_digest(iscsi, ISCSI_HEADER_DIGEST_NONE_CRC32C);
 
-	/*if (iscsi_url->user != NULL) {
+	if (iscsi_url->user != NULL) {
 		if (iscsi_set_initiator_username_pwd(iscsi, iscsi_url->user, iscsi_url->passwd) != 0) {
 			fprintf(stderr, "Failed to set initiator username and password\n");
 			iscsi_destroy_url(iscsi_url);
 			iscsi_destroy_context(iscsi);
 			return NULL;
 		}
-	}*/
+	}
 
-	/*if (iscsi_full_connect_sync(iscsi, iscsi_url->portal, lun) != 0) {
+	if (iscsi_full_connect_sync(iscsi, iscsi_url->portal, iscsi->lun) != 0) {
 		fprintf(stderr, "iscsi-support: Login Failed. %s\n", iscsi_get_error(iscsi));
 		iscsi_destroy_url(iscsi_url);
 		iscsi_destroy_context(iscsi);
@@ -137,9 +136,9 @@ if (lun) {}
 	}
 	if (lun != NULL) {
 		*lun = iscsi_url->lun;
-	}*/
+	}
 
-	//iscsi_destroy_url(iscsi_url);
+	iscsi_destroy_url(iscsi_url);
 	return iscsi;
 }
 

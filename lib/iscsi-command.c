@@ -201,6 +201,7 @@ iscsi_scsi_command_async(struct iscsi_context *iscsi, int lun,
 {
 //((struct iscsi_sync_state*)private_data)->task = task;
 
+fprintf(stderr, "kalai calling iscsi_queue_pdu\n");
 	struct iscsi_pdu *pdu;
 	int flags;
 
@@ -215,7 +216,6 @@ iscsi_scsi_command_async(struct iscsi_context *iscsi, int lun,
 				"not logged in.");
 		return -1;
 	}
-
 	/* We got an actual buffer from the application. Convert it to
 	 * a data-out iovector.
 	 */
@@ -688,12 +688,13 @@ iscsi_readcapacity10_task(struct iscsi_context *iscsi, int lun, int lba,
 	struct scsi_task *task;
 
 	task = scsi_cdb_readcapacity10(lba, pmi);
+fprintf(stderr, "kalai calling iscsi_queue_pdu\n");
 	if (task == NULL) {
 		iscsi_set_error(iscsi, "Out-of-memory: Failed to create "
 				"readcapacity10 cdb.");
 		return NULL;
 	}
-
+fprintf(stderr, "kalai calling iscsi_queue_pdu\n");
 	if (iscsi_scsi_command_async(iscsi, lun, task, cb,
 				     NULL, private_data) != 0) {
 		scsi_free_scsi_task(task);

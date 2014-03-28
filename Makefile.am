@@ -80,7 +80,7 @@ dist_noinst_HEADERS += test-tool/iscsi-support.h \
 		       test-tool/iscsi-test.h \
 		       test-tool/iscsi-test-cu.h
 bin_iscsi_test_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/test-tool
-#bin_iscsi_test_LDFLAGS = -ldl
+bin_iscsi_test_LDFLAGS = -ldl
 bin_iscsi_test_SOURCES = test-tool/iscsi-test.c \
 	test-tool/iscsi-support.c \
 	test-tool/0000_testunitready_simple.c \
